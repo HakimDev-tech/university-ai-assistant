@@ -1,4 +1,3 @@
-```markdown
 # University AI Assistant
 
 An intelligent RAG-powered assistant that lets university students upload course materials (PDF) and ask questions directly about their content. The system retrieves relevant passages from the document and generates precise, sourced answers — never inventing information.
@@ -149,4 +148,3 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 ## Contact
 
 Built as a portfolio project by [Your Name] — [Your LinkedIn/Twitter/Website]
-```
