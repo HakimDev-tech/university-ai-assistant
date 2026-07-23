@@ -1,5 +1,3 @@
-**`README.md`**
-```markdown
 # University AI Assistant
 
 An intelligent RAG-powered assistant that lets university students upload course materials (PDF or TXT) and ask questions directly about their content. The system retrieves relevant passages from the document and generates precise, sourced answers — never inventing information.
