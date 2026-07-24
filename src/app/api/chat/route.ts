@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { embedQuery, retrieveChunks, formatChunksForContext, buildPromptMessages } from '@/services/rag.service'
-import { google } from '@ai-sdk/google'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import {
   streamText,
   createUIMessageStreamResponse,
@@ -11,6 +11,13 @@ import {
 } from 'ai'
 
 export const runtime = 'edge'
+
+// Unified with lib/gemini.ts: both SDKs read the same GEMINI_API_KEY env var.
+// @ai-sdk/google's default `google` import otherwise looks for
+// GOOGLE_GENERATIVE_AI_API_KEY, which would be a second, easy-to-forget var.
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GEMINI_API_KEY,
+})
 
 const SYSTEM_PROMPT = `ROLE
 
@@ -218,7 +225,7 @@ export async function POST(req: NextRequest) {
   })
 
   const result = streamText({
-    model: google('gemini-2.0-flash'),
+    model: google('gemini-2.5-flash'),
     instructions: SYSTEM_PROMPT,
     messages: coreMessages,
   })
