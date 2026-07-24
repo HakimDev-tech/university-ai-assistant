@@ -1,26 +1,169 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ===========================
+   THEME
+=========================== */
+
+@theme {
+  /* Typography */
+  --font-sans: "Inter", sans-serif;
+
+  /* Backgrounds */
+  --color-canvas: #fcfbff;
+  --color-canvas-hover: #f7f4ff;
+
+  --color-surface: #ffffff;
+  --color-surface-secondary: #faf8ff;
+
+  /* Text */
+  --color-ink-primary: #1f1b2d;
+  --color-ink-secondary: #5d5875;
+  --color-ink-muted: #8c88a3;
+  --color-ink-inverse: #ffffff;
+
+  /* Brand */
+  --color-brand-50: #f7f4ff;
+  --color-brand-100: #f1ecff;
+  --color-brand-200: #e5ddff;
+  --color-brand-300: #d2c2ff;
+  --color-brand-400: #b596ff;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+  --color-brand-800: #5b21b6;
+  --color-brand-900: #4c1d95;
+
+  /* Status */
+  --color-success: #22c55e;
+  --color-success-bg: #dcfce7;
+
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fef3c7;
+
+  --color-error: #ef4444;
+  --color-error-bg: #fee2e2;
+
+  --color-info: #3b82f6;
+  --color-info-bg: #dbeafe;
+
+  /* Borders */
+  --color-border: #e9e5f5;
+  --color-border-hover: #d8d0ef;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ===========================
+   BASE
+=========================== */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-canvas text-ink-primary font-sans antialiased;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Focus clavier */
+
+*:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+/* Sélection */
+
+::selection {
+  background: var(--color-brand-200);
+  color: var(--color-brand-900);
+}
+
+/* ===========================
+   LINKS
+=========================== */
+
+.link {
+  @apply text-brand-600 hover:text-brand-700 underline-offset-4 transition-colors duration-200 hover:underline;
+}
+
+/* ===========================
+   BUTTONS
+=========================== */
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-full
+  bg-brand-600 px-5 py-2.5 text-sm font-medium text-white
+  transition-all duration-200
+  hover:bg-brand-700 hover:scale-[1.02]
+  active:scale-100;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-full
+  border border-border bg-white
+  px-5 py-2.5 text-sm font-medium
+  transition-all duration-200
+  hover:bg-brand-50;
+}
+
+/* ===========================
+   CARDS
+=========================== */
+
+.card {
+  @apply rounded-xl border border-border
+  bg-surface p-6
+  transition-all duration-200;
+}
+
+.card:hover {
+  border-color: var(--color-border-hover);
+}
+
+/* ===========================
+   INPUTS
+=========================== */
+
+.input {
+  @apply w-full rounded-xl border border-border
+  bg-white px-4 py-2.5
+  transition-colors duration-200
+  focus:border-brand-500
+  focus:outline-none;
+}
+
+/* ===========================
+   BADGES
+=========================== */
+
+.badge {
+  @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium;
+}
+
+.badge-success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.badge-warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.badge-error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.badge-info {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+/* ===========================
+   DIVIDER
+=========================== */
+
+.card-divider {
+  @apply border-b border-border;
 }

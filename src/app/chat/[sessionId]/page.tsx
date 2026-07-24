@@ -43,16 +43,26 @@ export default async function ChatPage({
   }))
 
   return (
-    <div className="min-h-screen p-4">
-      <div className="mx-auto max-w-4xl h-full">
-        <div className="flex items-center justify-between mb-4">
-          <Link href="/dashboard" className="text-blue-600 hover:underline text-sm">
-            ← Back to Dashboard
-          </Link>
-          <h1 className="text-xl font-bold">{session.title}</h1>
-          <div /> {/* spacer */}
+    <div className="flex flex-col min-h-[calc(100vh-3.5rem)]">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-border bg-surface px-6 py-3">
+        <Link
+          href="/dashboard"
+          className="text-sm text-ink-secondary hover:text-ink-primary transition-colors duration-150"
+        >
+          ← Dashboard
+        </Link>
+        <h1 className="text-sm font-medium text-ink-primary truncate max-w-md">
+          {session.title}
+        </h1>
+        <div className="w-16" /> {/* spacer for centering */}
+      </div>
+
+      {/* Chat area */}
+      <div className="flex-1 px-6 py-4">
+        <div className="mx-auto max-w-3xl h-full">
+          <ChatBox sessionId={sessionId} initialMessages={initialMessages} />
         </div>
-        <ChatBox sessionId={sessionId} initialMessages={initialMessages} />
       </div>
     </div>
   )

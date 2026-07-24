@@ -1,23 +1,50 @@
-import type { Metadata } from 'next'
-import Navbar from '@/components/Navbar'
-import './globals.css'
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import Navbar from "@/components/Navbar";
+import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: 'University AI Assistant',
-  description: 'Assistant IA pour vos cours universitaires',
-}
+  title: {
+    default: "University AI Assistant",
+    template: "%s • University AI Assistant",
+  },
+  description: "AI-powered assistant for querying and managing university documents.",
+};
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="fr">
-      <body className="min-h-screen bg-gray-50 text-gray-900 antialiased">
-        <Navbar />
-        <main>{children}</main>
+    <html
+      lang="fr"
+      className={inter.variable}
+      suppressHydrationWarning
+    >
+      <body
+        className="
+          min-h-screen
+          bg-canvas
+          text-ink-primary
+          font-sans
+          antialiased
+        "
+      >
+        <div className="flex min-h-screen flex-col">
+          <Navbar />
+
+          <main className="flex-1">
+            {children}
+          </main>
+        </div>
       </body>
     </html>
-  )
+  );
 }

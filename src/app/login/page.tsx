@@ -33,12 +33,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-md space-y-6 rounded-lg bg-white p-8 shadow">
-        <h1 className="text-2xl font-bold text-center">Sign in</h1>
-        <form onSubmit={handleLogin} className="space-y-4">
+    <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
+      <div className="w-full max-w-sm rounded-lg border border-border bg-surface p-6">
+        <h1 className="text-xl font-semibold tracking-tight text-ink-primary">
+          Sign in
+        </h1>
+        <p className="mt-1 text-sm text-ink-secondary">
+          Enter your credentials to access your documents
+        </p>
+
+        <form onSubmit={handleLogin} className="mt-6 space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium">
+            <label htmlFor="email" className="block text-sm font-medium text-ink-primary">
               Email
             </label>
             <input
@@ -47,12 +53,13 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded border border-gray-300 p-2 text-sm"
+              className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-ink-primary placeholder:text-ink-muted focus:border-accent-500 focus:ring-1 focus:ring-accent-500"
               placeholder="you@example.com"
             />
           </div>
+
           <div>
-            <label htmlFor="password" className="block text-sm font-medium">
+            <label htmlFor="password" className="block text-sm font-medium text-ink-primary">
               Password
             </label>
             <input
@@ -61,22 +68,27 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded border border-gray-300 p-2 text-sm"
+              className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-ink-primary placeholder:text-ink-muted focus:border-accent-500 focus:ring-1 focus:ring-accent-500"
               placeholder="••••••••"
             />
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+
+          {error && (
+            <p className="text-sm text-status-error">{error}</p>
+          )}
+
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="w-full rounded-md bg-accent-600 px-4 py-2 text-sm font-medium text-ink-inverse hover:bg-accent-700 disabled:opacity-50 transition-colors duration-150"
           >
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
-        <p className="text-center text-sm text-gray-500">
+
+        <p className="mt-4 text-center text-sm text-ink-secondary">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-blue-600 hover:underline">
+          <Link href="/signup" className="font-medium text-accent-600 hover:text-accent-700">
             Sign up
           </Link>
         </p>

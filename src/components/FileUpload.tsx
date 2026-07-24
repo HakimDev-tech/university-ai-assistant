@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { UploadCloud, FileText, Loader2 } from 'lucide-react'
 
 export default function FileUpload() {
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isDragActive, setIsDragActive] = useState(false) // Pour l'effet visuel du drag
+  const [isDragActive, setIsDragActive] = useState(false)
   const router = useRouter()
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,13 +17,12 @@ export default function FileUpload() {
     setError(null)
   }
 
-  // Gestion du Drag & Drop
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (e.type === "dragenter" || e.type === "dragover") {
+    if (e.type === 'dragenter' || e.type === 'dragover') {
       setIsDragActive(true)
-    } else if (e.type === "dragleave") {
+    } else if (e.type === 'dragleave') {
       setIsDragActive(false)
     }
   }
@@ -31,15 +31,17 @@ export default function FileUpload() {
     e.preventDefault()
     e.stopPropagation()
     setIsDragActive(false)
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const selected = e.dataTransfer.files[0]
-      // Validation basique du type de fichier
-      if (selected.type === "application/pdf" || selected.type === "text/plain") {
+      if (
+        selected.type === 'application/pdf' ||
+        selected.type === 'text/plain'
+      ) {
         setFile(selected)
         setError(null)
       } else {
-        setError("Fichier non supporté. Veuillez choisir un PDF ou TXT.")
+        setError('Format non supporté. Choisis un PDF ou un fichier TXT.')
       }
     }
   }
@@ -66,11 +68,11 @@ export default function FileUpload() {
       }
 
       router.push(`/chat/${data.sessionId}`)
-    } catch (err: unknown) { // 1. CORRECTION TS : Toujours utiliser 'unknown' pour les erreurs
+    } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message)
       } else {
-        setError('An unexpected error occurred.')
+        setError('Une erreur inattendue est survenue.')
       }
       setUploading(false)
     }
@@ -78,14 +80,16 @@ export default function FileUpload() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* 2. CORRECTION UX : Ajout des gestionnaires de drag & drop sur la zone dédiée */}
-      <div 
+      {/* Drop zone */}
+      <div
         onDragEnter={handleDrag}
         onDragOver={handleDrag}
         onDragLeave={handleDrag}
         onDrop={handleDrop}
-        className={`rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
-          isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+        className={`group relative overflow-hidden rounded-2xl border-2 border-dashed p-10 text-center transition-all duration-200 ${
+          isDragActive
+            ? 'scale-[1.01] border-violet-500 bg-violet-50'
+            : 'border-border bg-canvas-inset hover:border-violet-300 hover:bg-violet-50/40'
         }`}
       >
         <input
@@ -95,40 +99,53 @@ export default function FileUpload() {
           className="hidden"
           id="file-upload"
         />
-        {/* Label étendu sur toute la zone pour permettre le clic n'importe où */}
-        <label htmlFor="file-upload" className="cursor-pointer block w-full h-full">
+        <label
+          htmlFor="file-upload"
+          className="flex h-full w-full cursor-pointer flex-col items-center gap-3"
+        >
+          <div
+            className={`flex h-12 w-12 items-center justify-center rounded-full transition-colors duration-200 ${
+              isDragActive
+                ? 'bg-violet-600 text-white'
+                : 'bg-violet-100 text-violet-600 group-hover:bg-violet-600 group-hover:text-white'
+            }`}
+          >
+            {file ? <FileText className="h-5 w-5" /> : <UploadCloud className="h-5 w-5" />}
+          </div>
+
           {file ? (
-            <p className="text-sm font-medium text-gray-900">{file.name}</p>
+            <p className="text-sm font-medium text-ink-primary">{file.name}</p>
           ) : (
             <div>
-              <p className="text-sm font-medium text-gray-900">
-                Drag and drop your PDF here, or click to browse
+              <p className="text-sm font-medium text-ink-primary">
+                Glisse ton PDF ici, ou clique pour parcourir
               </p>
-              <p className="mt-1 text-xs text-gray-500">
-                PDF or TXT up to 30MB
-              </p>
+              <p className="mt-1 text-xs text-ink-muted">PDF ou TXT jusqu&apos;à 30 Mo</p>
             </div>
           )}
         </label>
       </div>
 
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {/* Error */}
+      {error && (
+        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600">
+          {error}
+        </p>
+      )}
 
+      {/* Submit */}
       <button
         type="submit"
         disabled={!file || uploading}
-        className="w-full rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50 transition-opacity"
+        className="flex w-full items-center justify-center gap-2 rounded-full bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-violet-600/30 transition-all duration-150 hover:scale-[1.01] hover:bg-violet-700 disabled:pointer-events-none disabled:opacity-50"
       >
         {uploading ? (
-          <span className="flex items-center justify-center">
-            <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-            Processing... (may take up to 2 minutes)
-          </span>
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Traitement en cours... (jusqu&apos;à 2 minutes)
+          </>
         ) : (
-          'Upload and Process'
+          'Envoyer et traiter'
         )}
       </button>
     </form>

@@ -8,34 +8,63 @@ export default function Navbar() {
   const pathname = usePathname()
 
   const linkClasses = (href: string) =>
-    `px-3 py-2 text-sm font-medium rounded transition-colors ${
+    `inline-flex items-center rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
       pathname === href
-        ? 'bg-blue-100 text-blue-700'
-        : 'text-gray-700 hover:bg-gray-100 hover:text-blue-600'
+        ? 'bg-brand-100 text-brand-700'
+        : 'text-ink-secondary hover:bg-brand-50 hover:text-brand-700'
     }`
 
   return (
-    <nav className="bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-        {/* Logo / App name */}
-        <Link href="/dashboard" className="flex items-center space-x-2">
-          <span className="text-lg font-semibold text-gray-900">
-            🎓 University AI Assistant
-          </span>
+    <header className="sticky top-0 z-50 border-b border-border bg-white/80 backdrop-blur-md">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-6">
+
+        {/* Logo */}
+
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-3"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-brand-500 to-brand-700 text-lg text-white shadow-sm">
+            🎓
+          </div>
+
+          <div className="hidden sm:block">
+            <p className="text-base font-semibold text-ink-primary">
+              University AI
+            </p>
+
+            <p className="text-xs text-ink-muted">
+              Assistant
+            </p>
+          </div>
         </Link>
 
-        {/* Navigation links */}
-        <div className="flex items-center space-x-1">
-          <Link href="/dashboard" className={linkClasses('/dashboard')}>
+        {/* Navigation */}
+
+        <nav className="flex items-center rounded-full border border-border bg-surface-secondary p-1">
+
+          <Link
+            href="/dashboard"
+            className={linkClasses('/dashboard')}
+          >
             Dashboard
           </Link>
+
+        </nav>
+
+        {/* Right */}
+
+        <div className="flex items-center gap-3">
+
+          <div className="hidden rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 md:flex">
+            Gemini AI
+          </div>
+
+          <LogoutButton />
+
         </div>
 
-        {/* Auth section */}
-        <div className="flex items-center">
-          <LogoutButton />
-        </div>
       </div>
-    </nav>
+    </header>
   )
 }
