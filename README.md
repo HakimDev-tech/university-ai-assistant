@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-=======
 # University AI Assistant
 
 An intelligent RAG-powered assistant that lets university students upload course materials (PDF or TXT) and ask questions directly about their content. The system retrieves relevant passages from the document and generates precise, sourced answers — never inventing information.
@@ -387,9 +383,5 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 ## Contact
 
-<<<<<<< HEAD
-Built as a portfolio project by [Your Name] — [Your LinkedIn/Twitter/Website]
->>>>>>> cd12ffa1bd03664227c64f3c9e835e5d60219cf8
-=======
 Built as a portfolio project by Hakim.
->>>>>>> 12a2ce27c8b005a91252b58af661a583d7b2daeb
+
