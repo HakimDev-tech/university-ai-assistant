@@ -1,153 +1,117 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { UploadCloud, FileText, Loader2 } from 'lucide-react'
+import { UploadCloud, FileText, LoaderCircle, ArrowUpRight, X } from 'lucide-react'
+
+const MAX_BYTES = 30 * 1024 * 1024
 
 export default function FileUpload() {
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isDragActive, setIsDragActive] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0] || null
-    setFile(selected)
+  function chooseFile(selected: File | null) {
     setError(null)
+    if (!selected) { setFile(null); return }
+    if (!['application/pdf', 'text/plain'].includes(selected.type)) {
+      setFile(null)
+      setError('This format is not supported. Choose a PDF or plain-text file.')
+      return
+    }
+    if (selected.size === 0) {
+      setFile(null)
+      setError('This file is empty.')
+      return
+    }
+    if (selected.size > MAX_BYTES) {
+      setFile(null)
+      setError('The file exceeds the 30 MB limit.')
+      return
+    }
+    setFile(selected)
   }
 
-  const handleDrag = (e: React.DragEvent) => {
+  function handleDrag(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault()
     e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setIsDragActive(true)
-    } else if (e.type === 'dragleave') {
-      setIsDragActive(false)
-    }
+    if (e.type === 'dragenter' || e.type === 'dragover') setIsDragActive(true)
+    if (e.type === 'dragleave') setIsDragActive(false)
   }
 
-  const handleDrop = (e: React.DragEvent) => {
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault()
     e.stopPropagation()
     setIsDragActive(false)
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const selected = e.dataTransfer.files[0]
-      if (
-        selected.type === 'application/pdf' ||
-        selected.type === 'text/plain'
-      ) {
-        setFile(selected)
-        setError(null)
-      } else {
-        setError('Format non supporté. Choisis un PDF ou un fichier TXT.')
-      }
-    }
+    chooseFile(e.dataTransfer.files?.[0] ?? null)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!file) return
-
+    if (!file || uploading) return
     setUploading(true)
     setError(null)
-
     const formData = new FormData()
     formData.append('file', file)
 
     try {
-      const res = await fetch('/api/process-document', {
-        method: 'POST',
-        body: formData,
-      })
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Upload failed')
-      }
-
+      const res = await fetch('/api/process-document', { method: 'POST', body: formData })
+      const data: { error?: string; sessionId?: string } = await res.json()
+      if (!res.ok) throw new Error(data.error || 'The document could not be processed.')
+      if (!data.sessionId) throw new Error('Processing completed without a conversation link.')
       router.push(`/chat/${data.sessionId}`)
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError('Une erreur inattendue est survenue.')
-      }
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred.')
       setUploading(false)
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Drop zone */}
       <div
         onDragEnter={handleDrag}
         onDragOver={handleDrag}
         onDragLeave={handleDrag}
         onDrop={handleDrop}
-        className={`group relative overflow-hidden rounded-2xl border-2 border-dashed p-10 text-center transition-all duration-200 ${
-          isDragActive
-            ? 'scale-[1.01] border-violet-500 bg-violet-50'
-            : 'border-border bg-canvas-inset hover:border-violet-300 hover:bg-violet-50/40'
-        }`}
+        className={`upload-zone px-5 py-8 sm:px-8 ${isDragActive ? 'is-active' : ''}`}
       >
         <input
+          ref={inputRef}
           type="file"
           accept=".pdf,.txt,application/pdf,text/plain"
-          onChange={handleFileChange}
-          className="hidden"
+          onChange={e => chooseFile(e.target.files?.[0] ?? null)}
+          className="sr-only"
           id="file-upload"
+          aria-describedby="upload-hint"
         />
-        <label
-          htmlFor="file-upload"
-          className="flex h-full w-full cursor-pointer flex-col items-center gap-3"
-        >
-          <div
-            className={`flex h-12 w-12 items-center justify-center rounded-full transition-colors duration-200 ${
-              isDragActive
-                ? 'bg-violet-600 text-white'
-                : 'bg-violet-100 text-violet-600 group-hover:bg-violet-600 group-hover:text-white'
-            }`}
-          >
-            {file ? <FileText className="h-5 w-5" /> : <UploadCloud className="h-5 w-5" />}
-          </div>
-
-          {file ? (
-            <p className="text-sm font-medium text-ink-primary">{file.name}</p>
-          ) : (
-            <div>
-              <p className="text-sm font-medium text-ink-primary">
-                Glisse ton PDF ici, ou clique pour parcourir
-              </p>
-              <p className="mt-1 text-xs text-ink-muted">PDF ou TXT jusqu&apos;à 30 Mo</p>
+        {file ? (
+          <div className="flex w-full max-w-md items-center gap-3 text-left">
+            <span className="grid h-10 w-10 shrink-0 place-items-center border border-border bg-surface"><FileText size={18} /></span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{file.name}</p>
+              <p className="mt-1 font-mono text-[10px] text-ink-muted">{(file.size / (1024 * 1024)).toFixed(2)} MB · Ready to process</p>
             </div>
-          )}
-        </label>
+            <button type="button" onClick={() => { chooseFile(null); if (inputRef.current) inputRef.current.value = '' }} className="p-2 text-ink-muted hover:text-error" aria-label="Remove selected file"><X size={15} /></button>
+          </div>
+        ) : (
+          <>
+            <div className="mb-4 grid h-11 w-11 place-items-center border border-border bg-surface"><UploadCloud size={20} strokeWidth={1.4} /></div>
+            <p className="text-sm font-semibold">Drop a course file here</p>
+            <p id="upload-hint" className="mt-2 text-xs text-ink-muted">PDF or TXT · Up to 30 MB</p>
+            <button type="button" onClick={() => inputRef.current?.click()} className="btn-secondary mt-5 !min-h-9 !px-3">Choose file <ArrowUpRight size={13} /></button>
+          </>
+        )}
       </div>
 
-      {/* Error */}
-      {error && (
-        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600">
-          {error}
-        </p>
-      )}
+      {error && <p role="alert" className="border border-error/25 bg-error-bg px-3 py-2 text-xs leading-5 text-error">{error}</p>}
 
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={!file || uploading}
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-violet-600/30 transition-all duration-150 hover:scale-[1.01] hover:bg-violet-700 disabled:pointer-events-none disabled:opacity-50"
-      >
-        {uploading ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Traitement en cours... (jusqu&apos;à 2 minutes)
-          </>
-        ) : (
-          'Envoyer et traiter'
-        )}
+      <button type="submit" disabled={!file || uploading} className="btn-primary w-full">
+        {uploading ? <><LoaderCircle size={15} className="animate-spin" /> Preparing source…</> : <>Prepare document <ArrowUpRight size={14} /></>}
       </button>
+      <p className="text-center text-[10px] leading-5 text-ink-muted">Text extraction and indexing happen before the study thread opens. Scanned PDFs currently require OCR outside this version.</p>
     </form>
   )
 }
