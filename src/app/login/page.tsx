@@ -1,12 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react'
+import { createClient, isSupabaseBrowserConfigured } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, CircleAlert, LoaderCircle } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, CircleAlert, LoaderCircle } from 'lucide-react'
 import MarginMark from '@/components/MarginMark'
-import { isSupabaseBrowserConfigured } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -15,13 +14,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const router = useRouter()
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('auth_error') === 'confirmation') {
-      setNotice('The confirmation link could not be verified or has expired. Request a fresh confirmation email, then open its link again.')
-    }
-  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
