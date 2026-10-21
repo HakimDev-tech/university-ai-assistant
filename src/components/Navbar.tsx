@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ArrowUpRight, BookOpenText } from 'lucide-react'
+import MarginMark from '@/components/MarginMark'
 import LogoutButton from '@/components/LogoutButton'
 
 export default function Navbar() {
@@ -13,7 +14,7 @@ export default function Navbar() {
     <header className="site-nav sticky top-0 z-50">
       <div className="site-shell flex h-full items-center justify-between gap-4">
         <Link href={onWorkspace ? '/dashboard' : '/'} className="wordmark" aria-label="Margin home">
-          <span className="wordmark-mark">m.</span>
+          <MarginMark size={34} />
           <span>
             <span className="wordmark-name block">MARGIN</span>
             <span className="wordmark-sub">Study from the source</span>
