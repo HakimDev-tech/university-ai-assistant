@@ -17,7 +17,7 @@ interface ChatBoxProps {
 
 export default function ChatBox({ sessionId, initialMessages = [], initialSources = {} }: ChatBoxProps) {
   const [input, setInput] = useState('')
-  const [sources, setSources] = useState<Record<string, { chunkIndex: number; content: string }[]>>(initialSources)
+  const [sources, setSources] = useState<Record<string, { id: string; chunkIndex: number; content: string }[]>>(initialSources)
   const bottomRef = useRef<HTMLDivElement>(null)
   const composerRef = useRef<HTMLTextAreaElement>(null)
 
