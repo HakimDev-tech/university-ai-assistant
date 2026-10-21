@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowDownRight, ArrowRight, BookOpenText, FileSearch, Quote } from "lucide-react";
+import MarginMark from "@/components/MarginMark";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -14,10 +15,10 @@ export default async function HomePage() {
         <div className="landing-copy">
           <div className="eyebrow flex items-center gap-3">
             <span className="inline-block h-px w-7 bg-brand-600" />
-            A study instrument · Issue 001
+            A study system for people who check the work
           </div>
           <h1 className="landing-title">
-            Study with<br />the source.<br /><em>Not the guess.</em>
+            Make knowledge<br />traceable.<br /><em>Keep the source.</em>
           </h1>
           <p className="landing-description">
             Margin turns your course PDFs into a workspace for careful questions.
@@ -36,7 +37,7 @@ export default async function HomePage() {
 
         <aside className="landing-aside" aria-label="Example of a source-linked answer">
           <div className="flex items-center justify-between">
-            <span className="eyebrow">Margin / Field note 01</span>
+            <span className="eyebrow">Margin / Evidence study</span>
             <span className="font-mono text-[10px] text-ink-muted">DEMO · 01</span>
           </div>
           <div className="paper-sheet my-7">
@@ -61,9 +62,9 @@ export default async function HomePage() {
       </section>
 
       <section id="method" className="site-shell py-16 md:py-20">
-        <div className="section-kicker eyebrow">A quieter kind of AI study tool</div>
+        <div className="section-kicker eyebrow">Built around the material, not the model</div>
         <div className="grid gap-5 pb-10 md:grid-cols-[1fr_1.2fr] md:items-end">
-          <h2 className="font-display max-w-xl text-4xl leading-tight tracking-tight md:text-5xl">Useful answers should come with a paper trail.</h2>
+          <h2 className="font-display max-w-xl text-4xl leading-tight tracking-tight md:text-5xl">An answer is a starting point. The source is the reference.</h2>
           <p className="max-w-lg text-sm leading-7 text-ink-secondary md:justify-self-end">Most chat tools optimize for a convincing response. Margin is built around a different question: can you trace this answer back to the material you are studying?</p>
         </div>
         <div id="principles" className="feature-grid">
@@ -91,7 +92,7 @@ export default async function HomePage() {
       <footer className="border-t border-border">
         <div className="site-shell flex flex-col gap-4 py-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="wordmark">
-            <span className="wordmark-mark">m.</span>
+            <MarginMark size={34} />
             <span className="wordmark-name">MARGIN</span>
           </div>
           <p className="text-xs text-ink-muted">Built for learning that can be checked.</p>
