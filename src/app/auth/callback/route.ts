@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
-    return NextResponse.redirect(new URL('/login?auth_error=confirmation', requestUrl.origin))
+    return NextResponse.redirect(new URL('/auth/confirmation-error', requestUrl.origin))
   }
 
   return NextResponse.redirect(new URL(next, requestUrl.origin))
