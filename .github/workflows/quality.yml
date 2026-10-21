@@ -5,7 +5,10 @@ on:
   push:
     branches:
       - main
-      - refactor/learning-desk-v2
+
+concurrency:
+  group: quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
