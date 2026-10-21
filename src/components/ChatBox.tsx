@@ -111,7 +111,7 @@ export default function ChatBox({ sessionId, initialMessages = [], initialSource
                   <div className="mt-3">
                     <div className="eyebrow mb-2">Evidence / {String(sources[message.id].length).padStart(2, '0')} passages</div>
                     {sources[message.id].map((source, idx) => (
-                      <SourceCard key={`${message.id}-${source.chunkIndex}-${idx}`} index={idx} chunkId={source.id} content={source.content} />
+                      <SourceCard key={`${message.id}-${source.chunkIndex}-${idx}`} index={idx} chunkId={source.id} chunkIndex={source.chunkIndex} content={source.content} />
                     ))}
                   </div>
                 )}
