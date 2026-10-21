@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: { default: "Margin — Study from the source", template: "%s · Margin" },
   description: "A source-first study desk for university material. Ask questions, trace every answer to its passage, and keep your study work grounded in your documents.",
   applicationName: "Margin",
+  icons: { icon: "/margin-mark.svg", shortcut: "/margin-mark.svg" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
