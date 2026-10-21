@@ -48,6 +48,8 @@ export async function GET(req: NextRequest) {
     .select('id, session_id, source_chunk_ids')
     .eq('session_id', sessionId)
     .eq('client_message_id', messageId)
+    .eq('sender', 'assistant')
+    .eq('user_id', user.id)
     .single<ChatMessageRow>()
 
   if (messageError || !message) {
