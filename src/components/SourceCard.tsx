@@ -6,10 +6,11 @@ import { ChevronDown, FileText, Quote } from 'lucide-react'
 interface SourceCardProps {
   index: number
   chunkId: string
+  chunkIndex: number
   content: string
 }
 
-export default function SourceCard({ index, chunkId, content }: SourceCardProps) {
+export default function SourceCard({ index, chunkId, chunkIndex, content }: SourceCardProps) {
   const [open, setOpen] = useState(false)
   return (
     <div className="source-card">
@@ -21,7 +22,7 @@ export default function SourceCard({ index, chunkId, content }: SourceCardProps)
       >
         <span className="flex min-w-0 items-center gap-2">
           <Quote size={13} strokeWidth={1.5} className="shrink-0 text-brand-700" />
-          <span className="font-mono text-[10px] text-ink-secondary">SOURCE {String(index + 1).padStart(2, '0')} / PASSAGE {String(Number(chunkId) + 1).padStart(2, '0')}</span>
+          <span className="font-mono text-[10px] text-ink-secondary">SOURCE {String(index + 1).padStart(2, '0')} / PASSAGE {String(chunkIndex + 1).padStart(2, '0')}</span>
         </span>
         <ChevronDown size={14} className={`shrink-0 text-ink-muted transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
