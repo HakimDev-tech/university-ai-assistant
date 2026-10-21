@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   const next = safeNextPath(requestUrl.searchParams.get('next'))
 
   if (!code) {
-    return NextResponse.redirect(new URL('/login?auth_error=confirmation', requestUrl.origin))
+    return NextResponse.redirect(new URL('/auth/confirmation-error', requestUrl.origin))
   }
 
   const supabase = await createClient()
