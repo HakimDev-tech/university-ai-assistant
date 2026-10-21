@@ -61,7 +61,7 @@ Do not run the initial migration blindly against a database containing existing 
 4. **Answer.** Pass retrieved excerpts as untrusted evidence to Gemini, stream the answer and validate cited chunk IDs against the retrieved set before storing them.
 5. **Inspect.** The UI lets the student expand the source excerpts attached to a response.
 
-See docs/ARCHITECTURE.md, docs/VISUAL_IDENTITY.md and docs/QUALITY_GATES.md for implementation boundaries and release checks.
+See docs/ARCHITECTURE.md, docs/VISUAL_IDENTITY.md, docs/AUTH_SETUP.md and docs/QUALITY_GATES.md for architecture, brand rules, signup setup and release checks.
 
 ## Known limitations — do not mistake these for solved problems
 
