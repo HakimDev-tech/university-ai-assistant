@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-sans), sans-serif;
-  --font-display: var(--font-display), Georgia, serif;
-  --font-mono: var(--font-mono), monospace;
+  --font-sans: "DM Sans", sans-serif;
+  --font-display: "Newsreader", Georgia, serif;
+  --font-mono: "IBM Plex Mono", monospace;
   --color-canvas: #f4f1e8;
   --color-canvas-hover: #ebe6d9;
   --color-surface: #fbfaf6;
