@@ -6,18 +6,21 @@ Set these for the preview environment as well as Production when appropriate:
 
 - `NEXT_PUBLIC_SUPABASE_URL`: the project's HTTPS URL, e.g. `https://YOUR_PROJECT.supabase.co`.
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: the project's public anon/publishable key.
+- `GEMINI_API_KEY`: a Google AI Studio API key. Server-only.
+- `SUPABASE_SERVICE_ROLE_KEY`: the Supabase service-role secret, used only for server-side assistant-response persistence. Server-only.
 
-These values are public browser configuration, not server secrets. Never put the Supabase service-role key in a `NEXT_PUBLIC_*` variable.
+The Supabase URL and publishable/anon key are public browser configuration. The Gemini key and service-role key are secrets: never prefix them with `NEXT_PUBLIC_`, never commit them, and never paste them into issue reports or chat messages. The current upload path uses the authenticated user's Supabase session and private Storage RLS; the service-role key remains required for saving generated assistant messages.
 
-After changing environment variables, redeploy the affected Vercel environment. A redeploy is required for Next.js to bake the public values into the browser bundle.
+In Vercel → Project → Settings → Environment Variables, set the Supabase URL and public key for Preview, Production and Development as needed. Add Gemini and service-role secrets to Preview and Production; use a local `.env.local` for development. After changing environment variables, redeploy the affected environment. Next.js must rebuild to bake public values into the browser bundle.
 
 ## Supabase Auth URL configuration
 
 In Supabase Dashboard → Authentication → URL Configuration:
 
 1. Set **Site URL** to the canonical deployed application origin.
-2. Add the exact preview origin to **Redirect URLs**, including the callback path:
+2. Add the exact preview origin to **Redirect URLs**, including the callback path, for example:
    `https://YOUR-DEPLOYMENT.vercel.app/auth/callback`
+   Add the current Vercel preview URL as well as the stable production domain if it differs.
 3. Add the production callback path separately if production uses another domain.
 4. For local development, add `http://localhost:3000/auth/callback`.
 
