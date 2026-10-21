@@ -14,8 +14,8 @@ const MAX_EXTRACTED_CHARS = 1_000_000
 const ALLOWED_TYPES = new Set(['application/pdf', 'text/plain'])
 
 function safeFilename(name: string): string {
-  const normalized = name.normalize('NFKC').replace(/[\\/\\\\]/g, '_').replace(/[\\u0000-\\u001f\\u007f]/g, '')
-  const safe = normalized.replace(/[^a-zA-Z0-9._() -]/g, '_').replace(/\\s+/g, ' ').trim().slice(0, 120)
+  const normalized = name.normalize('NFKC').replace(/[\\/\\\\]/g, '_').replace(/[\u0000-\u001f\u007f]/g, '')
+  const safe = normalized.replace(/[^a-zA-Z0-9._() -]/g, '_').replace(/\s+/g, ' ').trim().slice(0, 120)
   return safe && safe !== '.' && safe !== '..' ? safe : 'course-material'
 }
 
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
       ? fileBuffer.toString('utf8')
       : await extractTextFromPDF(fileBuffer)
 
-    const text = extractedText.replace(/\\u0000/g, '').trim()
+    const text = extractedText.replace(/\u0000/g, '').trim()
     if (!text) throw new Error('EMPTY_DOCUMENT')
     if (text.length > MAX_EXTRACTED_CHARS) throw new Error('DOCUMENT_TEXT_LIMIT')
 
