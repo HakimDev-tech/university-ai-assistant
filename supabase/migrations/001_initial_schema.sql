@@ -93,14 +93,14 @@ returns trigger
 language plpgsql
 security invoker
 set search_path = ''
-as $
+as $$
 begin
   update public.chat_sessions
   set updated_at = now()
   where id = new.session_id and user_id = new.user_id;
   return new;
 end;
-$;
+$$;
 
 drop trigger if exists chat_messages_touch_session on public.chat_messages;
 create trigger chat_messages_touch_session after insert on public.chat_messages
