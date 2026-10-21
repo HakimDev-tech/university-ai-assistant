@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { embedQuery, retrieveChunks, formatChunksForContext, buildPromptMessages } from '@/services/rag.service'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import {
@@ -193,6 +194,16 @@ export async function POST(req: NextRequest) {
       content: typeof message.content === 'string' ? message.content : JSON.stringify(message.content),
     }))
 
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('Assistant message persistence configuration is missing')
+    return new Response('Chat persistence is not configured', { status: 503 })
+  }
+  const supabaseAdmin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
+
   const result = streamText({
     model: google('gemini-2.5-flash'),
     instructions: SYSTEM_PROMPT,
@@ -211,7 +222,7 @@ export async function POST(req: NextRequest) {
       const citedUUIDs = [...text.matchAll(/\[Source \d+\]\((.*?)\)/g)].map(match => match[1])
       const validSourceIds = [...new Set(citedUUIDs.filter(id => usedChunkIds.includes(id)))]
 
-      const { error: insertAssistantError } = await supabase.from('chat_messages').insert({
+      const { error: insertAssistantError } = await supabaseAdmin.from('chat_messages').insert({
         client_message_id: responseMessage.id,
         session_id: sessionId,
         user_id: user.id,
