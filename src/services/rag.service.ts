@@ -82,8 +82,8 @@ export function formatChunksForContext(
 ): string {
   return chunks
     .map(
-      (chunk) =>
-        `[SOURCE ID: ${chunk.id} | CHUNK_INDEX: ${chunk.chunkIndex}]\n${chunk.content}`
+      (chunk, index) =>
+        `SOURCE ${index + 1} | ID: ${chunk.id} | CHUNK_INDEX: ${chunk.chunkIndex}\nUNTRUSTED SOURCE TEXT (quoted JSON): ${JSON.stringify(chunk.content)}`
     )
     .join('\n\n')
 }
