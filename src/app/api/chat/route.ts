@@ -11,9 +11,7 @@ import {
   type ModelMessage,
 } from 'ai'
 
-export const runtime = 'edge'
-
-const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY })
+export const runtime = 'nodejs'
 const MAX_QUESTION_CHARS = 8_000
 const MAX_REQUEST_MESSAGES = 40
 const MAX_HISTORY_MESSAGES = 8
@@ -71,6 +69,18 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return new Response('Unauthorized', { status: 401 })
+
+  const geminiApiKey = process.env.GEMINI_API_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!geminiApiKey) {
+    console.error('Chat configuration missing: GEMINI_API_KEY')
+    return new Response('AI service is not configured. Add GEMINI_API_KEY in Vercel and redeploy.', { status: 503 })
+  }
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error('Chat persistence configuration is missing')
+    return new Response('Chat history is not configured. Add the server-only Supabase service-role key in Vercel and redeploy.', { status: 503 })
+  }
 
   let body: RequestBody
   try {
@@ -194,15 +204,12 @@ export async function POST(req: NextRequest) {
       content: typeof message.content === 'string' ? message.content : JSON.stringify(message.content),
     }))
 
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.error('Assistant message persistence configuration is missing')
-    return new Response('Chat persistence is not configured', { status: 503 })
-  }
   const supabaseAdmin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    supabaseUrl,
+    serviceRoleKey,
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
+  const google = createGoogleGenerativeAI({ apiKey: geminiApiKey })
 
   const result = streamText({
     model: google('gemini-2.5-flash'),
