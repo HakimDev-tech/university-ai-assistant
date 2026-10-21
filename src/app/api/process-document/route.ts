@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'node:crypto'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
 import {
   extractTextFromPDF,
   chunkText,
@@ -47,11 +46,6 @@ export async function POST(request: NextRequest) {
   if (file.size > MAX_FILE_BYTES) {
     return NextResponse.json({ error: 'The maximum file size is 30 MB' }, { status: 413 })
   }
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.error('Document storage configuration is missing')
-    return NextResponse.json({ error: 'Document storage is not configured' }, { status: 503 })
-  }
-
   const fileBuffer = Buffer.from(await file.arrayBuffer())
   if (file.type === 'application/pdf' && !isPdf(fileBuffer)) {
     return NextResponse.json({ error: 'The file content does not look like a PDF' }, { status: 415 })
@@ -62,13 +56,7 @@ export async function POST(request: NextRequest) {
 
   const originalName = safeFilename(file.name)
   const storagePath = `${user.id}/${randomUUID()}_${originalName}`
-  const supabaseAdmin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  )
-
-  const { error: uploadError } = await supabaseAdmin.storage
+  const { error: uploadError } = await supabase.storage
     .from('documents')
     .upload(storagePath, fileBuffer, { contentType: file.type, upsert: false })
 
@@ -90,7 +78,7 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (docError || !document) {
-    await supabaseAdmin.storage.from('documents').remove([storagePath])
+    await supabase.storage.from('documents').remove([storagePath])
     console.error('Document record creation failed')
     return NextResponse.json({ error: 'The document could not be registered' }, { status: 503 })
   }
