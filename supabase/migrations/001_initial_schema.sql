@@ -173,6 +173,7 @@ drop policy if exists "messages_insert_own" on public.chat_messages;
 create policy "messages_insert_own" on public.chat_messages for insert to authenticated
 with check (
   user_id = (select auth.uid())
+  and sender = 'user'
   and exists (select 1 from public.chat_sessions s where s.id = session_id and s.user_id = (select auth.uid()))
 );
 
