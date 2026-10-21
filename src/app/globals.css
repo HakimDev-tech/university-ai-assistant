@@ -4,24 +4,24 @@
   --font-sans: "DM Sans", sans-serif;
   --font-display: "Newsreader", Georgia, serif;
   --font-mono: "IBM Plex Mono", monospace;
-  --color-canvas: #f4f1e8;
-  --color-canvas-hover: #ebe6d9;
+  --color-canvas: #f1f2f5;
+  --color-canvas-hover: #e6e8ee;
   --color-surface: #fbfaf6;
-  --color-surface-secondary: #eeeae0;
-  --color-ink-primary: #202923;
-  --color-ink-secondary: #5d665d;
-  --color-ink-muted: #858a7f;
+  --color-surface-secondary: #e6e8ee;
+  --color-ink-primary: #171b22;
+  --color-ink-secondary: #555b67;
+  --color-ink-muted: #777d89;
   --color-ink-inverse: #fbfaf6;
-  --color-brand-50: #f8e8e2;
-  --color-brand-100: #f1d4ca;
-  --color-brand-200: #e6b5a5;
-  --color-brand-300: #d99580;
-  --color-brand-400: #cb765e;
-  --color-brand-500: #b85b43;
-  --color-brand-600: #a74732;
-  --color-brand-700: #873a2b;
-  --color-brand-800: #682e25;
-  --color-brand-900: #47251f;
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #dce5ff;
+  --color-brand-200: #c1d0ff;
+  --color-brand-300: #a8baff;
+  --color-brand-400: #7f9bff;
+  --color-brand-500: #2455e8;
+  --color-brand-600: #2455e8;
+  --color-brand-700: #173fbe;
+  --color-brand-800: #15349a;
+  --color-brand-900: #10276d;
   --color-success: #426b4f;
   --color-success-bg: #e0e9dc;
   --color-warning: #91632b;
@@ -30,8 +30,8 @@
   --color-error-bg: #f5dfd9;
   --color-info: #526c78;
   --color-info-bg: #e0e8e9;
-  --color-border: #d9d5ca;
-  --color-border-hover: #b9b5a8;
+  --color-border: #d9dbe2;
+  --color-border-hover: #c7cad4;
 }
 
 :root { color-scheme: light; }
