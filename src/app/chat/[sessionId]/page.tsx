@@ -3,14 +3,10 @@ import { redirect } from 'next/navigation'
 import ChatBox from '@/components/ChatBox'
 import Link from 'next/link'
 import type { UIMessage } from 'ai'
+import { ArrowLeft, FileText } from 'lucide-react'
 
-export default async function ChatPage({
-  params,
-}: {
-  params: Promise<{ sessionId: string }>
-}) {
+export default async function ChatPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = await params
-
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -22,9 +18,7 @@ export default async function ChatPage({
     .eq('user_id', user.id)
     .single()
 
-  if (error || !session) {
-    redirect('/dashboard')
-  }
+  if (error || !session) redirect('/dashboard')
 
   const { data: messages, error: msgsError } = await supabase
     .from('chat_messages')
@@ -32,38 +26,29 @@ export default async function ChatPage({
     .eq('session_id', sessionId)
     .order('created_at', { ascending: true })
 
-  if (msgsError) {
-    console.error('Failed to load messages:', msgsError)
-  }
+  if (msgsError) console.error('Failed to load messages:', msgsError)
 
-  const initialMessages: UIMessage[] = (messages || []).map((msg) => ({
+  const initialMessages: UIMessage[] = (messages || []).map(msg => ({
     id: msg.id,
     role: msg.sender === 'user' ? 'user' : 'assistant',
     parts: [{ type: 'text', text: msg.content }],
   }))
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-3.5rem)]">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-border bg-surface px-6 py-3">
-        <Link
-          href="/dashboard"
-          className="text-sm text-ink-secondary hover:text-ink-primary transition-colors duration-150"
-        >
-          ← Dashboard
-        </Link>
-        <h1 className="text-sm font-medium text-ink-primary truncate max-w-md">
-          {session.title}
-        </h1>
-        <div className="w-16" /> {/* spacer for centering */}
-      </div>
-
-      {/* Chat area */}
-      <div className="flex-1 px-6 py-4">
-        <div className="mx-auto max-w-3xl h-full">
-          <ChatBox sessionId={sessionId} initialMessages={initialMessages} />
+    <main className="site-shell py-5 md:py-8">
+      <div className="mb-5 flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <Link href="/dashboard" className="mb-5 inline-flex items-center gap-2 text-xs text-ink-secondary hover:text-brand-700">
+            <ArrowLeft size={13} /> Back to study desk
+          </Link>
+          <div className="eyebrow mb-2 flex items-center gap-2"><FileText size={12} /> Document conversation / source-linked</div>
+          <h1 className="max-w-3xl truncate font-display text-3xl tracking-tight md:text-4xl">{session.title || 'Untitled study thread'}</h1>
         </div>
+        <span className="eyebrow">Thread / {session.id.slice(0, 8)}</span>
       </div>
-    </div>
+      <div className="mx-auto max-w-5xl">
+        <ChatBox sessionId={sessionId} initialMessages={initialMessages} />
+      </div>
+    </main>
   )
 }
