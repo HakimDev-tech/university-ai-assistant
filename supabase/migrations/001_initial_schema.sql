@@ -213,6 +213,7 @@ begin
 end;
 $$;
 
+revoke all on function public.match_documents(extensions.vector, uuid, uuid, float, int) from public, anon;
 grant execute on function public.match_documents(extensions.vector, uuid, uuid, float, int) to authenticated;
 
 -- Private document bucket. Storage objects are namespaced by auth.uid().
