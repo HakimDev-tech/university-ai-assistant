@@ -88,6 +88,24 @@ drop trigger if exists sessions_set_updated_at on public.chat_sessions;
 create trigger sessions_set_updated_at before update on public.chat_sessions
 for each row execute function public.set_updated_at();
 
+create or replace function public.touch_session_on_message()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $
+begin
+  update public.chat_sessions
+  set updated_at = now()
+  where id = new.session_id and user_id = new.user_id;
+  return new;
+end;
+$;
+
+drop trigger if exists chat_messages_touch_session on public.chat_messages;
+create trigger chat_messages_touch_session after insert on public.chat_messages
+for each row execute function public.touch_session_on_message();
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
