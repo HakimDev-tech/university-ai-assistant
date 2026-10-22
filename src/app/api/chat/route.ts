@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
     })
     const parsed = JSON.parse(classification.text.match(/\{[\s\S]*\}/)?.[0] ?? '{}') as { scope?: string }
     outOfScope = parsed.scope === 'out_of_scope'
-  } catch (error) {
+  } catch {
     console.error('Study scope classification failed; continuing with source-first answer')
   }
 
