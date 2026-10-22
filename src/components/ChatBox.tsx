@@ -65,7 +65,18 @@ export default function ChatBox({ sessionId, branchId, branchName, branches, ini
   }, [branchId, sendMessage])
 
   const markdownComponents: Components = {
-    a: ({ children }) => <span className="text-brand-700 underline decoration-brand-300 underline-offset-2">{children}</span>,
+    a: ({ children, href }) => {
+      if (href?.startsWith('#source-')) {
+        const chunkId = href.slice('#source-'.length)
+        return <button type="button" className="mx-0.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-md border border-brand-300/30 bg-brand-300/10 px-1 text-[10px] font-semibold leading-5 text-brand-700 align-baseline hover:border-brand-300/70 hover:bg-brand-300/20" aria-label={`Open source ${String(children)}`} title={`Open source ${String(children)}`} onClick={() => {
+          const target = document.getElementById(`source-${chunkId}`)
+          target?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          const toggle = target?.querySelector<HTMLButtonElement>('button')
+          if (toggle?.getAttribute('aria-expanded') !== 'true') toggle?.click()
+        }}>{children}</button>
+      }
+      return <span className="text-brand-700 underline decoration-brand-300 underline-offset-2">{children}</span>
+    },
     strong: ({ children }) => <strong className="font-semibold text-ink-primary">{children}</strong>,
     code: ({ children }) => <code className="rounded-md bg-canvas-hover px-1.5 py-0.5 font-mono text-[.9em]">{children}</code>,
     h1: ({ children }) => <h3 className="mb-2 mt-4 font-display text-xl">{children}</h3>,
