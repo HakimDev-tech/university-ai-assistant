@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -49,7 +50,14 @@ export async function POST(request: NextRequest) {
   // isolated in the parent version and is never included in the new branch.
   const prefix = allMessages.slice(0, targetIndex)
   if (prefix.length) {
-    const { error: copyError } = await supabase.from('chat_messages').insert(prefix.map(message => ({
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!supabaseUrl || !serviceRoleKey) {
+      await supabase.from('chat_branches').delete().eq('id', newBranch.id).eq('user_id', user.id)
+      return NextResponse.json({ error: 'Server-side history copy is not configured' }, { status: 503 })
+    }
+    const admin = createAdminClient(supabaseUrl, serviceRoleKey, { auth: { autoRefreshToken: false, persistSession: false } })
+    const { error: copyError } = await admin.from('chat_messages').insert(prefix.map(message => ({
       session_id: sessionId, branch_id: newBranch.id, user_id: user.id,
       sender: message.sender, content: message.content,
       source_chunk_ids: message.source_chunk_ids ?? [],
