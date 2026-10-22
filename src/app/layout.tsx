@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, IBM_Plex_Mono, Newsreader } from "next/font/google";
 import Navbar from "@/components/Navbar";
+import AmbientField from "@/components/AmbientField";
 import "./globals.css";
 
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
@@ -18,7 +19,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={`${dmSans.variable} ${newsreader.variable} ${ibmPlexMono.variable}`}>
       <body className="min-h-screen">
-        <div className="min-h-screen">
+        <AmbientField />
+        <div className="relative z-10 min-h-screen">
           <Navbar />
           <main>{children}</main>
         </div>

@@ -1,52 +1,73 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import type { UIMessage } from 'ai'
 import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
-import { ArrowUp, BookOpenText, LoaderCircle, Square, FileSearch } from 'lucide-react'
+import { ArrowUp, BookOpenText, LoaderCircle, Square, FileSearch, Pencil, GitBranch, X } from 'lucide-react'
 import SourceCard from '@/components/SourceCard'
 
+interface BranchOption { id: string; name: string }
 interface ChatBoxProps {
   sessionId: string
+  branchId: string
+  branchName: string
+  branches: BranchOption[]
   initialMessages?: UIMessage[]
   initialSources?: Record<string, { id: string; chunkIndex: number; content: string }[]>
 }
 
-export default function ChatBox({ sessionId, initialMessages = [], initialSources = {} }: ChatBoxProps) {
+export default function ChatBox({ sessionId, branchId, branchName, branches, initialMessages = [], initialSources = {} }: ChatBoxProps) {
   const [input, setInput] = useState('')
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
+  const [editError, setEditError] = useState('')
   const [sources, setSources] = useState<Record<string, { id: string; chunkIndex: number; content: string }[]>>(initialSources)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const composerRef = useRef<HTMLTextAreaElement>(null)
+  const shouldAutoScroll = useRef(true)
+  const autoSentBranch = useRef<string | null>(null)
+  const transport = useMemo(() => new DefaultChatTransport({
+    api: '/api/chat',
+    body: { sessionId, branchId },
+  }), [sessionId, branchId])
 
   const { messages, sendMessage, status, error, stop } = useChat({
+    id: `${sessionId}:${branchId}`,
     messages: initialMessages,
-    transport: new DefaultChatTransport({ api: '/api/chat', body: { sessionId } }),
+    transport,
     onFinish: async ({ message }) => {
       try {
         const res = await fetch(`/api/chat/sources?sessionId=${encodeURIComponent(sessionId)}&messageId=${encodeURIComponent(message.id)}`)
         if (res.ok) {
           const data = await res.json()
-          if (Array.isArray(data.sources) && data.sources.length > 0) {
-            setSources(prev => ({ ...prev, [message.id]: data.sources }))
-          }
+          if (Array.isArray(data.sources) && data.sources.length > 0) setSources(prev => ({ ...prev, [message.id]: data.sources }))
         }
-      } catch (err) {
-        console.error('Source lookup failed', err)
-      }
+      } catch { /* Source cards are supplementary; the answer remains readable. */ }
     },
   })
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    if (!shouldAutoScroll.current || !scrollRef.current) return
+    scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, sources])
+
+  useEffect(() => {
+    if (autoSentBranch.current === branchId) return
+    const key = `margin-draft:${branchId}`
+    const draft = window.sessionStorage.getItem(key)
+    if (!draft) return
+    window.sessionStorage.removeItem(key)
+    autoSentBranch.current = branchId
+    void sendMessage({ role: 'user', parts: [{ type: 'text', text: draft }] })
+  }, [branchId, sendMessage])
 
   const markdownComponents: Components = {
     a: ({ children }) => <span className="text-brand-700 underline decoration-brand-300 underline-offset-2">{children}</span>,
     strong: ({ children }) => <strong className="font-semibold text-ink-primary">{children}</strong>,
-    code: ({ children }) => <code className="bg-canvas-hover px-1 py-0.5 font-mono text-[.9em]">{children}</code>,
+    code: ({ children }) => <code className="rounded-md bg-canvas-hover px-1.5 py-0.5 font-mono text-[.9em]">{children}</code>,
     h1: ({ children }) => <h3 className="mb-2 mt-4 font-display text-xl">{children}</h3>,
     h2: ({ children }) => <h4 className="mb-2 mt-4 font-display text-lg">{children}</h4>,
   }
@@ -55,6 +76,23 @@ export default function ChatBox({ sessionId, initialMessages = [], initialSource
     e.preventDefault()
     const text = input.trim()
     if (!text || status !== 'ready') return
+    if (editingMessageId) {
+      setEditError('')
+      try {
+        const res = await fetch('/api/chat/branches', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, branchId, messageId: editingMessageId }),
+        })
+        const data = await res.json()
+        if (!res.ok || typeof data.branchId !== 'string') throw new Error(data.error || 'Could not create a version')
+        window.sessionStorage.setItem(`margin-draft:${data.branchId}`, text)
+        window.location.href = `/chat/${sessionId}?branchId=${encodeURIComponent(data.branchId)}`
+      } catch (err) {
+        setEditError(err instanceof Error ? err.message : 'The edited prompt could not be saved.')
+      }
+      return
+    }
     setInput('')
     if (composerRef.current) composerRef.current.style.height = 'auto'
     await sendMessage({ role: 'user', parts: [{ type: 'text', text }] })
@@ -63,10 +101,9 @@ export default function ChatBox({ sessionId, initialMessages = [], initialSource
   function onComposerKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      if (status === 'ready' && input.trim()) {
-        void sendMessage({ role: 'user', parts: [{ type: 'text', text: input.trim() }] })
-        setInput('')
-      }
+      if (status !== 'ready' || !input.trim()) return
+      const form = composerRef.current?.form
+      if (form) form.requestSubmit()
     }
   }
 
@@ -75,37 +112,60 @@ export default function ChatBox({ sessionId, initialMessages = [], initialSource
   return (
     <section className="chat-frame" aria-label="Document study conversation">
       <div className="chat-topline">
-        <div className="flex items-center gap-2">
-          <BookOpenText size={16} strokeWidth={1.5} />
-          <span className="text-xs font-semibold">Study conversation</span>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="chat-topline-icon"><BookOpenText size={16} strokeWidth={1.7} /></span>
+          <div className="min-w-0">
+            <div className="text-xs font-semibold">Study conversation</div>
+            <div className="eyebrow mt-1">{busy ? 'Reasoning / checking scope' : 'Source-linked study'}</div>
+          </div>
         </div>
-        <span className="eyebrow">{busy ? 'Working / retrieving sources' : 'Source-first mode'}</span>
+        <label className="branch-picker">
+          <GitBranch size={14} />
+          <span className="sr-only">Conversation version</span>
+          <select value={branchId} onChange={e => { window.location.href = `/chat/${sessionId}?branchId=${encodeURIComponent(e.target.value)}` }} aria-label="Conversation version">
+            {branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}{branch.id === branchId ? ' · current' : ''}</option>)}
+          </select>
+        </label>
       </div>
 
-      <div className="chat-scroll">
+      <div ref={scrollRef} className="chat-scroll" onScroll={e => {
+        const el = e.currentTarget
+        shouldAutoScroll.current = el.scrollHeight - el.scrollTop - el.clientHeight < 140
+      }}>
         {messages.length === 0 && (
           <div className="flex min-h-[320px] flex-col items-start justify-center px-2">
-            <span className="eyebrow">Start with a question</span>
+            <span className="eyebrow">Study / {branchName}</span>
             <h2 className="mt-4 max-w-md font-display text-4xl leading-tight tracking-tight">Read closer.<br />Understand better.</h2>
-            <p className="mt-4 max-w-sm text-sm leading-7 text-ink-secondary">Ask about a definition, compare two concepts, or request a step-by-step explanation from the material linked to this thread.</p>
+            <p className="mt-4 max-w-sm text-sm leading-7 text-ink-secondary">Ask about a definition, compare concepts, or work through an exercise. Margin keeps the session focused on this course and marks what comes from outside the document.</p>
             <div className="mt-7 flex items-center gap-2 border-t border-border pt-4 text-xs text-ink-muted">
-              <FileSearch size={15} /> Answers may be incomplete when your document does not contain enough evidence.
+              <FileSearch size={15} /> Course evidence first. Relevant gaps can be filled; unrelated questions are redirected.
             </div>
           </div>
         )}
 
         {messages.map(message => {
           const isUser = message.role === 'user'
+          const text = message.parts?.filter(part => part.type === 'text').map(part => part.text).join('') ?? ''
           return (
             <article key={message.id} className={`chat-message ${isUser ? 'chat-message-user' : ''}`}>
               <div className="message-mark" aria-label={isUser ? 'You' : 'Margin'}>{isUser ? 'YOU' : 'm.'}</div>
               <div className="min-w-0">
                 <div className="eyebrow mb-2">{isUser ? 'Your question' : 'Study note / AI response'}</div>
-                <div className="message-content">
-                  {message.parts?.map((part, index) => {
-                    if (part.type !== 'text') return null
-                    return <ReactMarkdown key={index} components={markdownComponents}>{part.text}</ReactMarkdown>
-                  })}
+                <div className="message-row-content">
+                  <div className="message-content">
+                    {message.parts?.map((part, index) => {
+                      if (part.type !== 'text') return null
+                      return <ReactMarkdown key={index} components={markdownComponents}>{part.text}</ReactMarkdown>
+                    })}
+                  </div>
+                  {isUser && (
+                    <button type="button" className="edit-prompt-button" title="Edit this prompt in a new version" aria-label="Edit this prompt in a new version" disabled={busy} onClick={() => {
+                      setEditingMessageId(message.id)
+                      setInput(text)
+                      setEditError('')
+                      composerRef.current?.focus()
+                    }}><Pencil size={14} /></button>
+                  )}
                 </div>
                 {!isUser && sources[message.id]?.length > 0 && (
                   <div className="mt-3">
@@ -126,7 +186,7 @@ export default function ChatBox({ sessionId, initialMessages = [], initialSource
             <div>
               <div className="eyebrow mb-2">Checking the material</div>
               <div className="message-content flex items-center gap-2 text-ink-secondary">
-                <LoaderCircle size={14} className="animate-spin" /> Finding passages that may support an answer…
+                <LoaderCircle size={14} className="animate-spin" /> Checking whether this belongs to the study topic…
               </div>
             </div>
           </div>
@@ -134,13 +194,11 @@ export default function ChatBox({ sessionId, initialMessages = [], initialSource
         <div ref={bottomRef} />
       </div>
 
-      {error && (
-        <div role="alert" className="border-t border-error/30 bg-error-bg px-4 py-3 text-xs leading-5 text-error">
-          The response could not be completed. Your previous study thread is preserved. Try again, or check the service configuration.
-        </div>
-      )}
+      {error && <div role="alert" className="border-t border-error/30 bg-error-bg px-4 py-3 text-xs leading-5 text-error">The response could not be completed. Your previous study thread is preserved. Try again or check the service configuration.</div>}
+      {editError && <div role="alert" className="border-t border-error/30 bg-error-bg px-4 py-3 text-xs leading-5 text-error">{editError}</div>}
 
       <form onSubmit={onSubmit} className="chat-composer">
+        {editingMessageId && <button type="button" className="cancel-edit-button" title="Cancel prompt edit" aria-label="Cancel prompt edit" onClick={() => { setEditingMessageId(null); setInput(''); setEditError('') }}><X size={15} /></button>}
         <label className="sr-only" htmlFor="study-question">Ask a question about this document</label>
         <textarea
           ref={composerRef}
@@ -149,19 +207,17 @@ export default function ChatBox({ sessionId, initialMessages = [], initialSource
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={onComposerKeyDown}
-          onInput={e => { e.currentTarget.style.height = 'auto'; e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 150)}px` }}
-          placeholder="Ask about a concept, passage, or example…"
+          onInput={e => { e.currentTarget.style.height = 'auto'; e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 180)}px` }}
+          placeholder={editingMessageId ? 'Edit prompt — a new version will be created…' : 'Ask about a concept, passage, or example…'}
           disabled={busy}
         />
         {busy ? (
-          <button type="button" onClick={() => stop()} className="btn-secondary !min-h-[44px] !px-3" aria-label="Stop response"><Square size={14} /></button>
+          <button type="button" onClick={() => stop()} className="btn-secondary !min-h-[46px] !px-4" aria-label="Stop response"><Square size={14} /></button>
         ) : (
-          <button type="submit" disabled={!input.trim() || status !== 'ready'} className="btn-primary !min-h-[44px] !px-4" aria-label="Send question"><ArrowUp size={16} /> <span className="hidden sm:inline">Ask</span></button>
+          <button type="submit" disabled={!input.trim() || status !== 'ready'} className="btn-primary !min-h-[46px] !px-4" aria-label={editingMessageId ? 'Save edited prompt as new version' : 'Send question'}><ArrowUp size={16} /> <span className="hidden sm:inline">{editingMessageId ? 'Branch & retry' : 'Ask'}</span></button>
         )}
       </form>
-      <div className="border-t border-border px-4 py-2 text-[10px] text-ink-muted">
-        Enter to ask · Shift + Enter for a new line · Verify important claims against the cited passage.
-      </div>
+      <div className="chat-footnote"><span>ENTER ↵ send</span><span>SHIFT + ENTER new line</span><span>Editing a prompt creates an independent version.</span></div>
     </section>
   )
 }
