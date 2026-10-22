@@ -73,7 +73,7 @@ end $$;
 create or replace function public.create_default_chat_branch()
 returns trigger
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 declare
@@ -98,7 +98,7 @@ for each row execute function public.create_default_chat_branch();
 create or replace function public.assign_default_branch_to_message()
 returns trigger
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 begin
