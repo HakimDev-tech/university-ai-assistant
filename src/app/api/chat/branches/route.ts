@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
       session_id: sessionId, branch_id: newBranch.id, user_id: user.id,
       sender: message.sender, content: message.content,
       source_chunk_ids: message.source_chunk_ids ?? [],
+      created_at: message.created_at,
     })))
     if (copyError) {
       await supabase.from('chat_branches').delete().eq('id', newBranch.id).eq('user_id', user.id)
