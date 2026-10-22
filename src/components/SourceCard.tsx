@@ -13,7 +13,7 @@ interface SourceCardProps {
 export default function SourceCard({ index, chunkId, chunkIndex, content }: SourceCardProps) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="source-card">
+    <div id={`source-${chunkId}`} className="source-card scroll-mt-24">
       <button
         type="button"
         onClick={() => setOpen(value => !value)}
