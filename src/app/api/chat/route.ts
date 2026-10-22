@@ -43,7 +43,7 @@ SOURCE-FIRST ANSWERING
 - If the question is ambiguous or genuinely cannot be answered reliably, say what is unclear and ask one focused clarification.
 
 CITATIONS AND HONESTY
-- Cite course-grounded claims using the compact format [N](source:chunk_uuid), for example [2](source:the-exact-chunk-uuid). The number and UUID must come from the SAME numbered SOURCE block. Never invent or mismatch either value. The visible citation must be only the short number; the source UUID stays hidden in the link target.
+- Cite course-grounded claims using the compact format [N](#source-chunk_uuid), for example [2](#source-the-exact-chunk-uuid). The number and UUID must come from the SAME numbered SOURCE block. Never invent or mismatch either value. The visible citation must be only the short number; the source UUID stays hidden in the link target.
 - Place citations near the claims they support. Never invent source IDs, page numbers, quotations, or citations.
 - Never attach course citations to general-knowledge claims.
 - When course context is absent, answer without citations and clearly mark the answer as general knowledge.
@@ -285,7 +285,7 @@ export async function POST(req: NextRequest) {
         .map(part => part.text)
         .join('')
 
-      const citedSources = [...text.matchAll(/\[(\d+)\]\(source:([^)]+)\)/g)]
+      const citedSources = [...text.matchAll(/\[(\d+)\]\(#source-([^)]+)\)/g)]
       const validSourceIds = [...new Set(citedSources
         .filter(match => {
           const sourceNumber = Number(match[1])
