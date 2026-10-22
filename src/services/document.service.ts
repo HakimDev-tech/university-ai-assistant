@@ -4,17 +4,6 @@ import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters'
 import { createClient } from '@/lib/supabase/server'
 import { getGeminiClient } from '@/lib/gemini'
 
-// Dynamically import pdf-parse to avoid ESM/CJS issues
-async function getPdfParseFunction() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mod: any = await import('pdf-parse')
-  return (mod.default || mod) as (buffer: Buffer) => Promise<{
-    text: string
-    numpages: number
-    info: Record<string, unknown>
-  }>
-}
-
 // Extract text from a PDF buffer
 export async function extractTextFromPDF(fileBuffer: Buffer): Promise<string> {
   const parser = new PDFParse({ data: fileBuffer })

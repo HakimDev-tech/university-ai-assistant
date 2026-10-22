@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   // Verify the session belongs to the user before looking up messages.
   const { data: session, error: sessionError } = await supabase
     .from('chat_sessions')
-    .select('id')
+    .select('id, document_id')
     .eq('id', sessionId)
     .eq('user_id', user.id)
     .single()
@@ -48,6 +48,8 @@ export async function GET(req: NextRequest) {
     .select('id, session_id, source_chunk_ids')
     .eq('session_id', sessionId)
     .eq('client_message_id', messageId)
+    .eq('sender', 'assistant')
+    .eq('user_id', user.id)
     .single<ChatMessageRow>()
 
   if (messageError || !message) {
@@ -68,6 +70,8 @@ export async function GET(req: NextRequest) {
   const { data: chunks, error: chunksError } = await supabase
     .from('document_chunks')
     .select('id, chunk_index, content')
+    .eq('user_id', user.id)
+    .eq('document_id', session.document_id)
     .in('id', sourceChunkIds)
 
   if (chunksError) {

@@ -1,48 +1,26 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { DM_Sans, IBM_Plex_Mono, Newsreader } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap",
-});
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const newsreader = Newsreader({ subsets: ["latin"], variable: "--font-display", display: "swap" });
+const ibmPlexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-mono", display: "swap" });
 
 export const metadata: Metadata = {
-  title: {
-    default: "University AI Assistant",
-    template: "%s • University AI Assistant",
-  },
-  description: "AI-powered assistant for querying and managing university documents.",
+  title: { default: "Margin — Study from the source", template: "%s · Margin" },
+  description: "A source-first study desk for university material. Ask questions, trace every answer to its passage, and keep your study work grounded in your documents.",
+  applicationName: "Margin",
+  icons: { icon: "/margin-mark.svg", shortcut: "/margin-mark.svg" },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="fr"
-      className={inter.variable}
-      suppressHydrationWarning
-    >
-      <body
-        className="
-          min-h-screen
-          bg-canvas
-          text-ink-primary
-          font-sans
-          antialiased
-        "
-      >
-        <div className="flex min-h-screen flex-col">
+    <html lang="en" className={`${dmSans.variable} ${newsreader.variable} ${ibmPlexMono.variable}`}>
+      <body className="min-h-screen">
+        <div className="min-h-screen">
           <Navbar />
-
-          <main className="flex-1">
-            {children}
-          </main>
+          <main>{children}</main>
         </div>
       </body>
     </html>

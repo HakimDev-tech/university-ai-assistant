@@ -1,98 +1,82 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient, isSupabaseBrowserConfigured } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { ArrowLeft, ArrowRight, Check, CircleAlert, LoaderCircle } from 'lucide-react'
+import MarginMark from '@/components/MarginMark'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    if (loading) return
     setError(null)
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-    } else {
-      router.push('/dashboard')
+    setNotice(null)
+    if (!isSupabaseBrowserConfigured()) {
+      setError('Account service is not configured for this deployment. Check the public Supabase URL and key in Vercel.')
+      return
+    }
+    setLoading(true)
+    try {
+      const { error } = await createClient().auth.signInWithPassword({ email: email.trim(), password })
+      if (error) {
+        setError('The email or password could not be verified. If you just signed up, confirm your email first.')
+        return
+      }
+      router.replace('/dashboard')
       router.refresh()
+    } catch (err) {
+      console.error('Sign-in request failed', err instanceof Error ? { name: err.name, message: err.message } : { type: typeof err })
+      setError(typeof navigator !== 'undefined' && !navigator.onLine
+        ? 'Your device appears to be offline. Reconnect and try again.'
+        : 'Margin could not reach the account service. Check your connection and try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
-      <div className="w-full max-w-sm rounded-lg border border-border bg-surface p-6">
-        <h1 className="text-xl font-semibold tracking-tight text-ink-primary">
-          Sign in
-        </h1>
-        <p className="mt-1 text-sm text-ink-secondary">
-          Enter your credentials to access your documents
-        </p>
-
-        <form onSubmit={handleLogin} className="mt-6 space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-ink-primary">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-ink-primary placeholder:text-ink-muted focus:border-accent-500 focus:ring-1 focus:ring-accent-500"
-              placeholder="you@example.com"
-            />
+    <main className="auth-stage">
+      <div className="auth-grid">
+        <aside className="auth-manifesto">
+          <Link href="/" className="auth-back"><ArrowLeft size={14} /> Back to Margin</Link>
+          <div className="auth-editorial">
+            <div className="auth-index"><span>FIELD GUIDE</span><span>NO. 001</span></div>
+            <h1>Pick up<br />where the<br /><em>evidence is.</em></h1>
+            <p>Your documents, questions, and source passages remain together in one focused study space.</p>
+            <div className="auth-proof"><div className="auth-proof-symbol"><CircleAlert size={19} strokeWidth={1.5} /></div><div><strong>Answers are not the source.</strong><span>Open the passage and decide whether the reasoning holds.</span></div></div>
           </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-ink-primary">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-ink-primary placeholder:text-ink-muted focus:border-accent-500 focus:ring-1 focus:ring-accent-500"
-              placeholder="••••••••"
-            />
+          <div className="auth-bottomline"><span>MARGIN / STUDY SYSTEM</span><span>EST. FOR CURIOSITY</span></div>
+        </aside>
+        <section className="auth-form-panel">
+          <div className="auth-form-top">
+            <Link href="/" aria-label="Margin home" className="auth-brand"><MarginMark size={38} /><span>MARGIN<span className="auth-brand-dot">.</span></span></Link>
+            <span className="auth-step">ACCOUNT ACCESS <b>01 / 02</b></span>
           </div>
-
-          {error && (
-            <p className="text-sm text-status-error">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-accent-600 px-4 py-2 text-sm font-medium text-ink-inverse hover:bg-accent-700 disabled:opacity-50 transition-colors duration-150"
-          >
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-ink-secondary">
-          Don&apos;t have an account?{' '}
-          <Link href="/signup" className="font-medium text-accent-600 hover:text-accent-700">
-            Sign up
-          </Link>
-        </p>
+          <div className="auth-form-body">
+            <div className="auth-kicker"><span className="auth-kicker-line" /> WELCOME BACK</div>
+            <h2>Return to<br /><em>your notes.</em></h2>
+            <p className="auth-intro">Sign in to continue your study threads and inspect the evidence behind previous answers.</p>
+            <form onSubmit={handleLogin} className="auth-form">
+              <div className="auth-field"><label htmlFor="email">EMAIL ADDRESS</label><input id="email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@university.edu" disabled={loading} /></div>
+              <div className="auth-field"><div className="auth-label-row"><label htmlFor="password">PASSWORD</label><span>YOUR ACCOUNT PASSWORD</span></div><input id="password" type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter your password" disabled={loading} /></div>
+              {error && <div role="alert" className="auth-error"><CircleAlert size={17} /><p>{error}</p></div>}
+              {notice && <p role="status" className="auth-notice">{notice}</p>}
+              <button type="submit" disabled={loading} className="auth-submit">{loading ? <><LoaderCircle size={16} className="animate-spin" /> Signing in…</> : <>Sign in to Margin <ArrowRight size={16} /></>}</button>
+            </form>
+            <div className="auth-assurance"><Check size={14} /><span>Private to your account. No public course library.</span></div>
+          </div>
+          <div className="auth-form-footer"><span>New to Margin?</span><Link href="/signup">Create an account <ArrowRight size={13} /></Link></div>
+        </section>
       </div>
-    </div>
+    </main>
   )
 }

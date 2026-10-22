@@ -1,56 +1,36 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, FileText } from 'lucide-react'
+import { ChevronDown, FileText, Quote } from 'lucide-react'
 
 interface SourceCardProps {
   index: number
   chunkId: string
+  chunkIndex: number
   content: string
 }
 
-// Cycle of accent tones so each source gets a distinct, memorable color —
-// echoing a highlighter-marker system across a document.
-const MARKER_COLORS = [
-  { bg: 'bg-violet-100', text: 'text-violet-700', ring: 'ring-violet-200' },
-  { bg: 'bg-emerald-100', text: 'text-emerald-700', ring: 'ring-emerald-200' },
-  { bg: 'bg-amber-100', text: 'text-amber-700', ring: 'ring-amber-200' },
-  { bg: 'bg-sky-100', text: 'text-sky-700', ring: 'ring-sky-200' },
-  { bg: 'bg-rose-100', text: 'text-rose-700', ring: 'ring-rose-200' },
-]
-
-export default function SourceCard({ index, chunkId, content }: SourceCardProps) {
-  const [expanded, setExpanded] = useState(false)
-  const marker = MARKER_COLORS[index % MARKER_COLORS.length]
-
+export default function SourceCard({ index, chunkId, chunkIndex, content }: SourceCardProps) {
+  const [open, setOpen] = useState(false)
   return (
-    <div
-      className={`overflow-hidden rounded-xl border border-transparent bg-white shadow-sm shadow-violet-900/5 ring-1 ${marker.ring} transition-all duration-200`}
-    >
+    <div className="source-card">
       <button
-        onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left transition-colors duration-150 hover:bg-canvas-hover/60"
+        type="button"
+        onClick={() => setOpen(value => !value)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left"
       >
-        <span className="flex items-center gap-2">
-          <span
-            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${marker.bg} ${marker.text}`}
-          >
-            {index + 1}
-          </span>
-          <span className="flex items-center gap-1 text-xs font-medium text-ink-secondary">
-            <FileText className="h-3 w-3" />
-            Source {index + 1}
-          </span>
+        <span className="flex min-w-0 items-center gap-2">
+          <Quote size={13} strokeWidth={1.5} className="shrink-0 text-brand-700" />
+          <span className="font-mono text-[10px] text-ink-secondary">SOURCE {String(index + 1).padStart(2, '0')} / PASSAGE {String(chunkIndex + 1).padStart(2, '0')}</span>
         </span>
-        <ChevronDown
-          className={`h-3.5 w-3.5 text-ink-muted transition-transform duration-200 ${
-            expanded ? 'rotate-180' : ''
-          }`}
-        />
+        <ChevronDown size={14} className={`shrink-0 text-ink-muted transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
-      {expanded && (
-        <div className="border-t border-border/60 px-3 py-2.5 text-xs leading-relaxed text-ink-secondary">
-          {content.length > 300 ? content.slice(0, 300) + '...' : content}
+      {open && (
+        <div className="border-t border-border px-3 py-3">
+          <div className="mb-2 flex items-center gap-2 eyebrow"><FileText size={11} /> Retrieved excerpt</div>
+          <p className="whitespace-pre-wrap text-xs leading-6 text-ink-secondary">{content}</p>
+          <p className="mt-3 font-mono text-[9px] text-ink-muted">CHUNK REF · {chunkId}</p>
         </div>
       )}
     </div>

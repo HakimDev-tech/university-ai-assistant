@@ -2,68 +2,47 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { ArrowUpRight, BookOpenText } from 'lucide-react'
+import MarginMark from '@/components/MarginMark'
 import LogoutButton from '@/components/LogoutButton'
 
 export default function Navbar() {
   const pathname = usePathname()
-
-  const linkClasses = (href: string) =>
-    `inline-flex items-center rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
-      pathname === href
-        ? 'bg-brand-100 text-brand-700'
-        : 'text-ink-secondary hover:bg-brand-50 hover:text-brand-700'
-    }`
+  const onWorkspace = pathname === '/dashboard' || pathname.startsWith('/chat/')
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-white/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-6">
-
-        {/* Logo */}
-
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-3"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-brand-500 to-brand-700 text-lg text-white shadow-sm">
-            🎓
-          </div>
-
-          <div className="hidden sm:block">
-            <p className="text-base font-semibold text-ink-primary">
-              University AI
-            </p>
-
-            <p className="text-xs text-ink-muted">
-              Assistant
-            </p>
-          </div>
+    <header className="site-nav sticky top-0 z-50">
+      <div className="site-shell flex h-full items-center justify-between gap-4">
+        <Link href={onWorkspace ? '/dashboard' : '/'} className="wordmark" aria-label="Margin home">
+          <MarginMark size={34} />
+          <span>
+            <span className="wordmark-name block">MARGIN</span>
+            <span className="wordmark-sub">Study from the source</span>
+          </span>
         </Link>
 
-        {/* Navigation */}
-
-        <nav className="flex items-center rounded-full border border-border bg-surface-secondary p-1">
-
-          <Link
-            href="/dashboard"
-            className={linkClasses('/dashboard')}
-          >
-            Dashboard
-          </Link>
-
+        <nav className="flex items-center gap-1" aria-label="Main navigation">
+          {onWorkspace ? (
+            <Link href="/dashboard" className={`nav-link ${pathname === '/dashboard' ? 'nav-link-active' : ''}`}>
+              <span className="inline-flex items-center gap-2"><BookOpenText size={14} strokeWidth={1.7} /> Study desk</span>
+            </Link>
+          ) : (
+            <>
+              <a href="#method" className="nav-link hidden sm:inline-flex">Method</a>
+              <a href="#principles" className="nav-link hidden sm:inline-flex">Principles</a>
+            </>
+          )}
         </nav>
 
-        {/* Right */}
-
         <div className="flex items-center gap-3">
-
-          <div className="hidden rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 md:flex">
-            Gemini AI
-          </div>
-
-          <LogoutButton />
-
+          {onWorkspace ? (
+            <LogoutButton />
+          ) : (
+            <Link href="/login" className="nav-link inline-flex items-center gap-1">
+              Sign in <ArrowUpRight size={13} />
+            </Link>
+          )}
         </div>
-
       </div>
     </header>
   )
