@@ -1,0 +1,66 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+
+export async function POST(request: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  let body: { sessionId?: unknown; branchId?: unknown; messageId?: unknown }
+  try { body = await request.json() } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+  const { sessionId, branchId, messageId } = body
+  if (typeof sessionId !== 'string' || typeof branchId !== 'string' || typeof messageId !== 'string') {
+    return NextResponse.json({ error: 'sessionId, branchId and messageId are required' }, { status: 400 })
+  }
+
+  const { data: session } = await supabase.from('chat_sessions')
+    .select('id, user_id').eq('id', sessionId).eq('user_id', user.id).single()
+  if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+
+  const { data: sourceBranch } = await supabase.from('chat_branches')
+    .select('id, name').eq('id', branchId).eq('session_id', sessionId).eq('user_id', user.id).single()
+  if (!sourceBranch) return NextResponse.json({ error: 'Branch not found' }, { status: 404 })
+
+  const { data: targetMessage } = await supabase.from('chat_messages')
+    .select('id, created_at').eq('id', messageId).eq('branch_id', branchId)
+    .eq('session_id', sessionId).eq('user_id', user.id).eq('sender', 'user').single()
+  if (!targetMessage) return NextResponse.json({ error: 'Question not found in this version' }, { status: 404 })
+
+  const { count } = await supabase.from('chat_branches')
+    .select('id', { count: 'exact', head: true }).eq('session_id', sessionId).eq('user_id', user.id)
+  const nextVersion = (count ?? 1) + 1
+  const { data: newBranch, error: branchError } = await supabase.from('chat_branches').insert({
+    session_id: sessionId, user_id: user.id, name: `Version ${nextVersion}`,
+    parent_branch_id: branchId, forked_from_message_id: messageId,
+  }).select('id, name').single()
+  if (branchError || !newBranch) {
+    console.error('Conversation branch creation failed')
+    return NextResponse.json({ error: 'Could not create a new version' }, { status: 503 })
+  }
+
+  // Copy only the immutable prefix before the edited question. Later messages
+  // remain on the original branch and cannot leak into this version.
+  const { data: prefix, error: prefixError } = await supabase.from('chat_messages')
+    .select('sender, content, source_chunk_ids, created_at')
+    .eq('branch_id', branchId).eq('session_id', sessionId).eq('user_id', user.id)
+    .lt('created_at', targetMessage.created_at).order('created_at', { ascending: true })
+  if (prefixError) {
+    await supabase.from('chat_branches').delete().eq('id', newBranch.id).eq('user_id', user.id)
+    return NextResponse.json({ error: 'Could not copy the earlier conversation' }, { status: 503 })
+  }
+  if (prefix?.length) {
+    const { error: copyError } = await supabase.from('chat_messages').insert(prefix.map(message => ({
+      session_id: sessionId, branch_id: newBranch.id, user_id: user.id,
+      sender: message.sender, content: message.content,
+      source_chunk_ids: message.source_chunk_ids ?? [],
+    })))
+    if (copyError) {
+      await supabase.from('chat_branches').delete().eq('id', newBranch.id).eq('user_id', user.id)
+      return NextResponse.json({ error: 'Could not preserve the earlier conversation' }, { status: 503 })
+    }
+  }
+
+  return NextResponse.json({ branchId: newBranch.id, branchName: newBranch.name })
+}
