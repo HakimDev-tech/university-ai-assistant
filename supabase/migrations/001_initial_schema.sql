@@ -201,14 +201,14 @@ begin
   end if;
   return query
     select c.id, c.content, c.chunk_index,
-      (1 - (c.embedding <=> query_embedding))::float as similarity
+      (1 - (c.embedding OPERATOR(extensions.<=>) query_embedding))::float as similarity
     from public.document_chunks c
     join public.documents d on d.id = c.document_id
     where c.user_id = target_user_id
       and c.document_id = target_document_id
       and d.user_id = target_user_id
-      and (1 - (c.embedding <=> query_embedding)) >= match_threshold
-    order by c.embedding <=> query_embedding
+      and (1 - (c.embedding OPERATOR(extensions.<=>) query_embedding)) >= match_threshold
+    order by c.embedding OPERATOR(extensions.<=>) query_embedding
     limit match_count;
 end;
 $$;
