@@ -6,6 +6,9 @@ import Link from 'next/link'
 import type { UIMessage } from 'ai'
 import { ArrowLeft, FileText, GitBranch } from 'lucide-react'
 
+interface SourceRow { id: string; chunk_index: number; content: string }
+interface MessageRow { id: string; sender: string; content: string; source_chunk_ids: string[] | null }
+
 export default async function ChatPage({
   params,
   searchParams,
@@ -43,7 +46,7 @@ export default async function ChatPage({
 
   const { data: messages, error: msgsError } = await supabase
     .from('chat_messages')
-    .select('id, sender, content, created_at')
+    .select('id, sender, content, source_chunk_ids, created_at')
     .eq('session_id', sessionId)
     .eq('branch_id', activeBranch.id)
     .eq('user_id', user.id)
@@ -51,11 +54,26 @@ export default async function ChatPage({
 
   if (msgsError) console.error('Failed to load messages:', msgsError)
 
-  const initialMessages: UIMessage[] = (messages || []).map(msg => ({
+  const typedMessages = (messages ?? []) as MessageRow[]
+  const initialMessages: UIMessage[] = typedMessages.map(msg => ({
     id: msg.id,
     role: msg.sender === 'user' ? 'user' : 'assistant',
     parts: [{ type: 'text', text: msg.content }],
   }))
+  const sourceIds = [...new Set(typedMessages.flatMap(message => message.source_chunk_ids ?? []))]
+  let initialSources: Record<string, { id: string; chunkIndex: number; content: string }[]> = {}
+  if (sourceIds.length) {
+    const { data: sourceRows } = await supabase.from('document_chunks')
+      .select('id, chunk_index, content')
+      .eq('document_id', session.document_id).eq('user_id', user.id).in('id', sourceIds)
+    const typedSources = (sourceRows ?? []) as SourceRow[]
+    initialSources = Object.fromEntries(typedMessages
+      .filter(message => message.sender === 'assistant' && (message.source_chunk_ids?.length ?? 0) > 0)
+      .map(message => [message.id, (message.source_chunk_ids ?? [])
+        .map(id => typedSources.find(source => source.id === id))
+        .filter((source): source is SourceRow => Boolean(source))
+        .map(source => ({ id: source.id, chunkIndex: source.chunk_index, content: source.content }))]))
+  }
 
   return (
     <main className="site-shell chat-page-shell">
@@ -75,6 +93,7 @@ export default async function ChatPage({
           branchName={activeBranch.name}
           branches={branches.map(branch => ({ id: branch.id, name: branch.name }))}
           initialMessages={initialMessages}
+          initialSources={initialSources}
         />
       </div>
     </main>
