@@ -113,13 +113,13 @@ export function buildPromptMessages(
     ...history,
     {
       role: 'user',
-      content: `You must answer ONLY using the information contained in the document context below while strictly following the system instructions.
+      content: `Use the supplied course context as the first source of evidence, following the system instructions. If the context supports the answer, explain it and cite only the supplied source IDs. If it is missing or insufficient, clearly label any helpful answer from general knowledge as outside the document; never pretend it came from the course.
 
-=== VALID DOCUMENT CONTEXT ===
+=== COURSE CONTEXT (may be empty or incomplete) ===
 
 ${context || 'No relevant context found in documents.'}
 
-=== USER QUESTION ===
+=== STUDENT QUESTION ===
 
 ${question}
 
