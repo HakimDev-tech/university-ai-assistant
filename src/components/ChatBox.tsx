@@ -16,13 +16,14 @@ interface ChatBoxProps {
   branchName: string
   branches: BranchOption[]
   initialMessages?: UIMessage[]
+  initialSources?: Record<string, { id: string; chunkIndex: number; content: string }[]>
 }
 
-export default function ChatBox({ sessionId, branchId, branchName, branches, initialMessages = [] }: ChatBoxProps) {
+export default function ChatBox({ sessionId, branchId, branchName, branches, initialMessages = [], initialSources = {} }: ChatBoxProps) {
   const [input, setInput] = useState('')
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
   const [editError, setEditError] = useState('')
-  const [sources, setSources] = useState<Record<string, { id: string; chunkIndex: number; content: string }[]>>({})
+  const [sources, setSources] = useState<Record<string, { id: string; chunkIndex: number; content: string }[]>>(initialSources)
   const bottomRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const composerRef = useRef<HTMLTextAreaElement>(null)
