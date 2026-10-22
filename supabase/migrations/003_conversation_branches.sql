@@ -67,3 +67,27 @@ begin
       foreign key (default_branch_id) references public.chat_branches(id) on delete set null;
   end if;
 end $$;
+
+
+-- New study sessions always begin on an explicit Version 1 branch.
+create or replace function public.create_default_chat_branch()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  new_branch_id uuid;
+begin
+  insert into public.chat_branches(session_id, user_id, name)
+  values (new.id, new.user_id, 'Version 1')
+  returning id into new_branch_id;
+  update public.chat_sessions set default_branch_id = new_branch_id where id = new.id;
+  return new;
+end;
+$$;
+
+drop trigger if exists chat_sessions_create_default_branch on public.chat_sessions;
+create trigger chat_sessions_create_default_branch
+after insert on public.chat_sessions
+for each row execute function public.create_default_chat_branch();
