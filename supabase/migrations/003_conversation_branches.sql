@@ -91,3 +91,30 @@ drop trigger if exists chat_sessions_create_default_branch on public.chat_sessio
 create trigger chat_sessions_create_default_branch
 after insert on public.chat_sessions
 for each row execute function public.create_default_chat_branch();
+
+
+-- Keep the currently deployed chat API compatible during rollout: legacy inserts
+-- that do not send branch_id are assigned to the session's original version.
+create or replace function public.assign_default_branch_to_message()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.branch_id is null then
+    select s.default_branch_id into new.branch_id
+    from public.chat_sessions s
+    where s.id = new.session_id and s.user_id = new.user_id;
+  end if;
+  if new.branch_id is null then
+    raise exception 'conversation version is not configured';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists chat_messages_assign_default_branch on public.chat_messages;
+create trigger chat_messages_assign_default_branch
+before insert on public.chat_messages
+for each row execute function public.assign_default_branch_to_message();
