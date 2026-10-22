@@ -282,6 +282,7 @@ export async function POST(req: NextRequest) {
       const { error: insertAssistantError } = await supabaseAdmin.from('chat_messages').insert({
         client_message_id: responseMessage.id,
         session_id: sessionId,
+        branch_id: branchId,
         user_id: user.id,
         sender: 'assistant',
         content: text,
