@@ -43,7 +43,7 @@ SOURCE-FIRST ANSWERING
 - If the question is ambiguous or genuinely cannot be answered reliably, say what is unclear and ask one focused clarification.
 
 CITATIONS AND HONESTY
-- Cite course-grounded claims using the exact format [Source N](chunk_uuid), only with IDs included in the supplied context.
+- Cite course-grounded claims using [Source N](chunk_uuid). N and chunk_uuid must come from the SAME numbered SOURCE block in the supplied context; never mix a source number with another block's ID.
 - Place citations near the claims they support. Never invent source IDs, page numbers, quotations, or citations.
 - Never attach course citations to general-knowledge claims.
 - When course context is absent, answer without citations and clearly mark the answer as general knowledge.
@@ -189,8 +189,17 @@ export async function POST(req: NextRequest) {
     content: lastUserMessage,
   })
   if (insertUserMsgError) {
-    console.error('User message persistence failed')
-    return new Response('Unable to save question', { status: 503 })
+    // A retried request may reuse the same client message ID. Continue only if
+    // that exact question already exists in this user's active branch.
+    const { data: existingUserMessage } = typeof lastMessage.id === 'string'
+      ? await supabase.from('chat_messages').select('id')
+          .eq('client_message_id', lastMessage.id).eq('session_id', sessionId)
+          .eq('branch_id', branchId).eq('user_id', user.id).eq('sender', 'user').maybeSingle()
+      : { data: null }
+    if (!existingUserMessage) {
+      console.error('User message persistence failed')
+      return new Response('Unable to save question', { status: 503 })
+    }
   }
 
   let queryEmbedding: number[] = []
@@ -276,8 +285,13 @@ export async function POST(req: NextRequest) {
         .map(part => part.text)
         .join('')
 
-      const citedUUIDs = [...text.matchAll(/\[Source \d+\]\((.*?)\)/g)].map(match => match[1])
-      const validSourceIds = [...new Set(citedUUIDs.filter(id => usedChunkIds.includes(id)))]
+      const citedSources = [...text.matchAll(/\[Source (\d+)\]\((.*?)\)/g)]
+      const validSourceIds = [...new Set(citedSources
+        .filter(match => {
+          const sourceNumber = Number(match[1])
+          return sourceNumber >= 1 && usedChunkIds[sourceNumber - 1] === match[2]
+        })
+        .map(match => match[2]))]
 
       const { error: insertAssistantError } = await supabaseAdmin.from('chat_messages').insert({
         client_message_id: responseMessage.id,
